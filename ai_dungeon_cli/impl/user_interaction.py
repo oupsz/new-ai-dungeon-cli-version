@@ -131,6 +131,7 @@ class TermIo(UserIo):
 
     def handle_basic_output(self, text: str):
         self.stop_spinner()
+        text = str(text)
         for line in text.split("\n"):
             print("\n".join(textwrap.wrap(line, self.get_width())))
         print()
