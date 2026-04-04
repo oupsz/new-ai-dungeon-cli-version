@@ -2,6 +2,8 @@
 
 AI Dungeon CLI Release is a terminal-based interactive fiction client for Linux. It lets you play AI-generated adventures from the command line, keep persistent local references to saved adventures, and resume previous sessions without leaving the terminal.
 
+![Gameplay 1](Screenshot_20260404_222757.png)
+
 ## Features
 
 - Interactive story gameplay with `/do`, `/say`, `/story`, and `/remember` actions
@@ -9,6 +11,7 @@ AI Dungeon CLI Release is a terminal-based interactive fiction client for Linux.
 - Terminal-first user interface with optional slow typing mode
 - Spinner-based loading feedback while the client waits for API responses
 - Resume support with `--resume <id>` and `--resume-last`
+![Gameplay 2](Screenshot_20260404_222903.png)
 
 ## Requirements
 
