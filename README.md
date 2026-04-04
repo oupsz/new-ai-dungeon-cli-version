@@ -21,6 +21,27 @@ That original project was an important reference for the terminal gameplay flow 
 
 ![Gameplay 2](Screenshot_20260404_222903.png)
 
+## Playing
+
+Unless specified, all user inputs are considered Do actions.
+
+Quoted input entries are automatically interpreted as Say actions, e.g.:
+
+> "Hey dragon! You didn't invite me to the latest BBQ party!"
+
+Do be explicit about the action type, prefix your input with a command:
+
+    /do
+    /say
+    /story
+    /remember
+
+For example, the previous Say prompt could also be written:
+
+> /say Hey dragon! You didn't invite me to the latest BBQ party!
+
+To quit, either press Ctrl-C, Ctrl-D or type in the special /quit command.
+
 ## Requirements
 
 - Linux
