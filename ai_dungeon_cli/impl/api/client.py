@@ -277,6 +277,54 @@ class AiDungeonApiClient:
 
         return last_snapshot
 
+    def _get_latest_adventure_window(self, page_size=4):
+        action_count = self._get_action_count()
+        if action_count <= 0:
+            return None
+
+        page_size = max(page_size, 4)
+        offset = max(action_count - page_size, 0)
+        return self._get_adventure_window(offset=offset, page_size=page_size)
+
+    @staticmethod
+    def _latest_action(snapshot):
+        if not snapshot:
+            return None
+
+        actions = snapshot['read']['actions']
+        if not actions:
+            return None
+
+        return actions[-1]
+
+    def _wait_for_latest_continue(self, previous_action_count=0, previous_last_action_id=None, timeout=30):
+        deadline = time.time() + timeout
+
+        while time.time() < deadline:
+            snapshot = self._get_latest_adventure_window(page_size=4)
+            latest_action = self._latest_action(snapshot)
+            if snapshot is None or latest_action is None:
+                time.sleep(1)
+                continue
+
+            action_count = snapshot.get('actionCount', 0)
+            if action_count <= previous_action_count:
+                time.sleep(1)
+                continue
+
+            if previous_last_action_id and latest_action['id'] == previous_last_action_id:
+                time.sleep(1)
+                continue
+
+            if latest_action['type'] == 'continue':
+                return snapshot
+
+            time.sleep(1)
+
+        raise RuntimeError(
+            "AI Dungeon accepted the action but did not return a new continuation before timing out."
+        )
+
 
     @staticmethod
     def _join_initial_story(actions):
@@ -424,6 +472,9 @@ class AiDungeonApiClient:
 
     def init_custom_story_pitch(self, adventure_id, user_input):
         previous_action_count = self._get_action_count()
+        previous_snapshot = self._get_latest_adventure_window(page_size=4)
+        previous_last_action = self._latest_action(previous_snapshot)
+        previous_last_action_id = previous_last_action['id'] if previous_last_action else None
 
         debug_print("send custom settings story pitch")
         result = self._execute_query('''
@@ -444,7 +495,14 @@ class AiDungeonApiClient:
         })
         debug_print(result)
 
-        snapshot = self._wait_for_new_continue(offset=previous_action_count)
+        response = result['addAction']
+        if not response['success']:
+            raise RuntimeError(response.get('message') or "AI Dungeon rejected the custom story prompt.")
+
+        snapshot = self._wait_for_latest_continue(
+            previous_action_count=previous_action_count,
+            previous_last_action_id=previous_last_action_id,
+        )
         if not snapshot or not snapshot['read']['actions']:
             return user_input
         return snapshot['read']['actions'][-1]['text']
@@ -541,6 +599,9 @@ class AiDungeonApiClient:
 
     def perform_regular_action(self, adventure_id, action, user_input, character_name = None):
         previous_action_count = self._get_action_count()
+        previous_snapshot = self._get_latest_adventure_window(page_size=4)
+        previous_last_action = self._latest_action(previous_snapshot)
+        previous_last_action_id = previous_last_action['id'] if previous_last_action else None
 
         debug_print("send regular action")
         result = self._execute_query('''
@@ -562,8 +623,15 @@ class AiDungeonApiClient:
         })
         debug_print(result)
 
+        response = result['addAction']
+        if not response['success']:
+            raise RuntimeError(response.get('message') or "AI Dungeon rejected the action.")
+
         debug_print("get story continuation")
-        snapshot = self._wait_for_new_continue(offset=previous_action_count)
+        snapshot = self._wait_for_latest_continue(
+            previous_action_count=previous_action_count,
+            previous_last_action_id=previous_last_action_id,
+        )
         debug_print(snapshot)
         if not snapshot or not snapshot['read']['actions']:
             return ""

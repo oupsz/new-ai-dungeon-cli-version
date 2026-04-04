@@ -387,10 +387,14 @@ class AiDungeonGame(AbstractAiDungeonGame):
 
         (action, user_input) = self.find_action_type(user_input)
 
-        resp = self.run_with_spinner(
-            "Thinking...",
-            lambda: self.api.perform_regular_action(self.adventure_id, action, user_input, self.character_name),
-        )
+        try:
+            resp = self.run_with_spinner(
+                "Thinking...",
+                lambda: self.api.perform_regular_action(self.adventure_id, action, user_input, self.character_name),
+            )
+        except RuntimeError as err:
+            self.user_io.handle_basic_output(str(err))
+            return
 
         self.user_io.handle_story_output(resp)
 
@@ -508,6 +512,11 @@ def main():
         term_io.stop_spinner()
         term_io.handle_basic_output("Totally unexpected exception:")
         term_io.handle_basic_output(err)
+        exit(1)
+
+    except RuntimeError as err:
+        term_io.stop_spinner()
+        term_io.handle_basic_output(str(err))
         exit(1)
 
 
