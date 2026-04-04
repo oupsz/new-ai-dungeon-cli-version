@@ -9,6 +9,8 @@ https://github.com/Eigenbahn/ai-dungeon-cli
 
 That original project was an important reference for the terminal gameplay flow and overall user experience, but it no longer works with the modern AI Dungeon backend. This release was created as a new practical implementation inspired by that earlier work and its README.
 
+![Gameplay 1](Screenshot_20260404_222757.png)
+
 ## Features
 
 - Interactive story gameplay with `/do`, `/say`, `/story`, and `/remember` actions
@@ -16,6 +18,8 @@ That original project was an important reference for the terminal gameplay flow 
 - Terminal-first user interface with optional slow typing mode
 - Spinner-based loading feedback while the client waits for API responses
 - Resume support with `--resume <id>` and `--resume-last`
+
+![Gameplay 2](Screenshot_20260404_222903.png)
 
 ## Requirements
 
