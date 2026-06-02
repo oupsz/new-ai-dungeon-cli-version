@@ -68,90 +68,6 @@ chmod +x install.sh
 
 The installer creates a local virtual environment in `./venv`, installs the required dependencies, and creates a local launcher at `./venv/bin/ai-dungeon`.
 
-## Usage
-
-Before starting the client, export the backend key:
-
-```bash
-export AIDUNGEON_FIREBASE_API_KEY="YOUR_FIREBASE_WEB_API_KEY"
-```
-
-Then run the game with either of the following:
-
-```bash
-source venv/bin/activate
-ai-dungeon
-```
-
-or
-
-```bash
-./venv/bin/ai-dungeon
-```
-
-## Example Commands
-
-Start a new session:
-
-```bash
-./venv/bin/ai-dungeon
-```
-
-Resume the most recent saved adventure:
-
-```bash
-./venv/bin/ai-dungeon --resume-last
-```
-
-Resume a specific adventure by short ID or adventure ID:
-
-```bash
-./venv/bin/ai-dungeon --resume OwKgw6dd61NW
-./venv/bin/ai-dungeon --resume 194532449
-```
-
-Enable slow typing output:
-
-```bash
-./venv/bin/ai-dungeon --slow-typing
-```
-
-## Save and Load Notes
-
-- Adventure metadata is stored locally in `~/.config/ai-dungeon-cli/adventures.yml`
-- `--resume-last` loads the most recently saved adventure reference
-- `--resume <id>` accepts either an adventure short ID or a numeric adventure ID
-- The client updates the local save reference whenever a story is created or resumed
-
-## Virtual Environment Notes
-
-The project installs into a local virtual environment to keep your system Python clean and predictable. This avoids polluting global packages and keeps the command isolated to this project folder.
-
-If you open a new shell, reactivate the environment before running `ai-dungeon`:
-
-```bash
-source venv/bin/activate
-```
-
-If you prefer not to activate the environment manually, use the launcher directly:
-
-```bash
-./venv/bin/ai-dungeon
-```
-
-## Uninstall
-
-Remove the project folder and local save metadata if you no longer need them:
-
-```bash
-rm -rf venv
-rm -f ~/.config/ai-dungeon-cli/adventures.yml
-```
-
-If you want to keep your saves, remove only `venv/`.
-
----
-
 ## Configuration — Getting AI Dungeon to Actually Connect
 
 This section covers the practical setup needed for the client to authenticate and
@@ -296,6 +212,88 @@ The Firebase key is wrong or malformed. A valid key starts with `AIza` followed 
 - Your **password** and any **session/ID token** are *not* public — never paste
   them into logs, issues, or shared files. Prefer `chmod 600` on the config, or
   pass credentials via flags instead of storing them.
+
+## Usage
+
+Before starting the client, export the backend key:
+
+```bash
+export AIDUNGEON_FIREBASE_API_KEY="YOUR_FIREBASE_WEB_API_KEY"
+```
+
+Then run the game with either of the following:
+
+```bash
+source venv/bin/activate
+ai-dungeon
+```
+
+or
+
+```bash
+./venv/bin/ai-dungeon
+```
+
+## Example Commands
+
+Start a new session:
+
+```bash
+./venv/bin/ai-dungeon
+```
+
+Resume the most recent saved adventure:
+
+```bash
+./venv/bin/ai-dungeon --resume-last
+```
+
+Resume a specific adventure by short ID or adventure ID:
+
+```bash
+./venv/bin/ai-dungeon --resume OwKgw6dd61NW
+./venv/bin/ai-dungeon --resume 194532449
+```
+
+Enable slow typing output:
+
+```bash
+./venv/bin/ai-dungeon --slow-typing
+```
+
+## Save and Load Notes
+
+- Adventure metadata is stored locally in `~/.config/ai-dungeon-cli/adventures.yml`
+- `--resume-last` loads the most recently saved adventure reference
+- `--resume <id>` accepts either an adventure short ID or a numeric adventure ID
+- The client updates the local save reference whenever a story is created or resumed
+
+## Virtual Environment Notes
+
+The project installs into a local virtual environment to keep your system Python clean and predictable. This avoids polluting global packages and keeps the command isolated to this project folder.
+
+If you open a new shell, reactivate the environment before running `ai-dungeon`:
+
+```bash
+source venv/bin/activate
+```
+
+If you prefer not to activate the environment manually, use the launcher directly:
+
+```bash
+./venv/bin/ai-dungeon
+```
+
+## Uninstall
+
+Remove the project folder and local save metadata if you no longer need them:
+
+```bash
+rm -rf venv
+rm -f ~/.config/ai-dungeon-cli/adventures.yml
+```
+
+If you want to keep your saves, remove only `venv/`.
 
 ## Creator
 
