@@ -150,6 +150,153 @@ rm -f ~/.config/ai-dungeon-cli/adventures.yml
 
 If you want to keep your saves, remove only `venv/`.
 
+---
+
+## Configuration — Getting AI Dungeon to Actually Connect
+
+This section covers the practical setup needed for the client to authenticate and
+reach the AI Dungeon backend, plus the most common login problem and its fix.
+
+### 1. The Firebase Web API key
+
+The client authenticates against Firebase Identity Toolkit using the **public**
+Firebase Web API key that the AI Dungeon frontend ships in its JavaScript bundle.
+This key is *public by design* — it is not a secret, not a password, and not a
+session token. It only identifies the Firebase project and does not grant access
+to any account on its own.
+
+Depending on the build you run:
+
+- **Hardcoded build:** the key is already embedded in
+  `ai_dungeon_cli/impl/api/client.py` (`self.firebase_api_key = "AIza..."`). In
+  this case the `AIDUNGEON_FIREBASE_API_KEY` environment variable is **not read** —
+  exporting it is harmless but has no effect, and the client works as-is.
+- **Env-driven build:** reads the key from `AIDUNGEON_FIREBASE_API_KEY`, so export
+  it before launching:
+
+  ```bash
+  export AIDUNGEON_FIREBASE_API_KEY="YOUR_FIREBASE_WEB_API_KEY"
+  ```
+
+To check which build you have:
+
+```bash
+grep -rn "AIDUNGEON_FIREBASE_API_KEY" ai_dungeon_cli/
+```
+
+If that prints nothing, your build uses the hardcoded key and you do not need to
+export anything.
+
+### 2. The referer/origin restriction (already handled)
+
+The Firebase key is restricted by HTTP referrer: requests without the correct
+`Referer`/`Origin` header are rejected with
+`Requests from referer <empty> are blocked`. The client already sets these headers
+on its HTTP session, so there is nothing to configure:
+
+```python
+self.session.headers.update({
+    "Content-Type": "application/json",
+    "Origin": "https://play.aidungeon.com",
+    "Referer": "https://play.aidungeon.com/",
+})
+```
+
+If you ever hit a "referer blocked" error, it means those headers were lost — make
+sure you are on an up-to-date build.
+
+### 3. Credentials: `~/.config/ai-dungeon-cli/config.yml`
+
+The client reads your login from a YAML config (or from CLI flags). It searches:
+
+- `<package dir>/config.yml`
+- `~/.config/ai-dungeon-cli/config.yml`
+
+Example `~/.config/ai-dungeon-cli/config.yml`:
+
+```yaml
+email: you@example.com
+password: "your-account-password"
+slow_typing_effect: false
+prompt: "> "
+```
+
+Notes:
+- Keep it private: `chmod 600 ~/.config/ai-dungeon-cli/config.yml`.
+- If the password has special characters (`: # @ ! ...`), wrap it in quotes.
+- Or pass credentials at launch instead of storing them on disk:
+
+  ```bash
+  ai-dungeon --email "you@example.com" --password 'your-account-password'
+  ```
+
+### 4. Your account must have a password
+
+This client only supports **email + password** login (`signInWithPassword`). If
+your AI Dungeon account was created with **"Continue with Google / Apple /
+Discord"**, it has no password and email login will never succeed. Fix it at
+**play.aidungeon.com → Account / Settings → set a password**, then use that
+password here.
+
+### 5. Launch
+
+```bash
+source venv/bin/activate
+ai-dungeon
+```
+
+## Troubleshooting
+
+### `INVALID_LOGIN_CREDENTIALS`
+
+```json
+{"error": {"code": 400, "message": "INVALID_LOGIN_CREDENTIALS"}}
+```
+
+This comes straight from Firebase and means the key and referer were accepted, but
+the **email/password pair was rejected**. Firebase merged the older
+`EMAIL_NOT_FOUND` and `INVALID_PASSWORD` into this single generic message, so it
+covers several causes:
+
+1. **Wrong or changed password** — the most common case. If you changed your
+   password on the website, `~/.config/ai-dungeon-cli/config.yml` may still hold
+   the **old** one and the client keeps sending it.
+   **Fix:** update the `password:` value in that file (or delete the
+   `email`/`password` lines and pass them with `--email`/`--password`).
+2. **Typo** — trailing spaces, caps lock, or an unquoted special character in YAML.
+3. **Social-only account** — no password set (see Configuration step 4).
+4. **Wrong email** — the account lives under a different address.
+
+### Checking which sign-in methods an account has (no password needed)
+
+To tell "wrong password" apart from "social-only account", ask Firebase which
+sign-in methods exist for an email. This needs only the email and returns no
+tokens:
+
+```bash
+curl -sS -X POST \
+  "https://identitytoolkit.googleapis.com/v1/accounts:createAuthUri?key=YOUR_FIREBASE_WEB_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Referer: https://play.aidungeon.com/" \
+  -d '{"identifier":"you@example.com","continueUri":"https://play.aidungeon.com/"}'
+```
+
+- `"signinMethods":["password"]` → has a password; it is a wrong-password case.
+- OAuth providers (e.g. `google.com`) or empty `signinMethods` → social account;
+  set a password on the website first.
+
+### `API key not valid`
+
+The Firebase key is wrong or malformed. A valid key starts with `AIza` followed by
+35 characters.
+
+### Security notes
+
+- The Firebase Web API key is **public** and safe to ship in the client.
+- Your **password** and any **session/ID token** are *not* public — never paste
+  them into logs, issues, or shared files. Prefer `chmod 600` on the config, or
+  pass credentials via flags instead of storing them.
+
 ## Creator
 
 Creator: Pedro W. L. Soares de Souza
